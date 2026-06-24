@@ -5,6 +5,7 @@ from view.main_window import MainWindow
 from model.firebird_conn import FirebirdConnection
 from model.postgres_conn import PostgresConnection
 from model.migrator import Migrator
+from config import get_firebird_config, get_postgres_config
 
 
 class AppController:
@@ -13,6 +14,9 @@ class AppController:
         self.fb = FirebirdConnection()
         self.pg = PostgresConnection()
         self.view = MainWindow(root, controller=self)
+
+        self.view.set_fb_credentials(get_firebird_config())
+        self.view.set_pg_credentials(get_postgres_config())
 
         self._fb_connected = False
         self._pg_connected = False

@@ -7,4 +7,5 @@
 
 ## How to generate .exe:
 `py -m pip install pyinstaller`
-`py -m PyInstaller --onefile --windowed --name="ImportadorSistemaDatha" main.py`
+`cd output`
+`py -m PyInstaller --onefile --windowed --name="ImportadorSistemaDatha" ../main.py`

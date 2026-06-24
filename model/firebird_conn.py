@@ -10,7 +10,7 @@ class FirebirdConnection:
 
     def connect(self, host: str, port: str, database: str, user: str, password: str) -> tuple[bool, str]:
         if fdb is None:
-            return False, "Library 'fdb' not installed. Run: pip install fdb"
+            return False, "Lib 'fdb' não instalada. Rodar no cmd: pip install fdb"
         try:
             dsn = f"{host}/{port}:{database}"
             self.conn = fdb.connect(
@@ -26,17 +26,54 @@ class FirebirdConnection:
 
     def fetch_distinct_aliquotas(self) -> list[str]:
         cur = self.conn.cursor()
-        cur.execute("SELECT DISTINCT CDALIQ FROM PRODUTOS WHERE CDALIQ IS NOT NULL ORDER BY CDALIQ")
+        cur.execute("""
+            SELECT DISTINCT CDALIQ
+            FROM PRODUTOS
+            WHERE CDALIQ IS NOT NULL
+            ORDER BY CDALIQ
+        """)
         return [str(row[0]).strip() for row in cur.fetchall()]
 
     def fetch_products(self) -> list[tuple]:
         cur = self.conn.cursor()
         cur.execute("""
-            SELECT CDPROD, NMPROD, CUSTOPROD, VENDAPROD,
-                   ESTPROD, LOCALPRODESTOQUE, CDCLASSFISCAL,
-                   CDBARRA, CDALIQ
-            FROM PRODUTOS
+            SELECT
+                p.CDPROD,
+                p.NMPROD,
+                p.CUSTOPROD,
+                p.VENDAPROD,
+                p.ESTPROD,
+                p.LOCALPRODESTOQUE,
+                p.CDCLASSFISCAL,
+                p.CDBARRA,
+                p.CDALIQ,
+                g.NMGRUPO,
+                p.CDUNIDADE
+            FROM PRODUTOS p
+            LEFT JOIN GRUPOS g ON g.CDGRUPO = p.CDGRUPO
             ORDER BY CDPROD
+        """)
+        return cur.fetchall()
+
+    def fetch_groups(self) -> list[str]:
+        cur = self.conn.cursor()
+        cur.execute("""
+            SELECT
+                NMGRUPO
+            FROM GRUPOS
+            WHERE NMGRUPO IS NOT NULL
+            ORDER BY NMGRUPO
+        """)
+        return [str(row[0]).strip() for row in cur.fetchall()]
+    
+    def fetch_units(self) -> list[tuple]:
+        cur = self.conn.cursor()
+        cur.execute("""
+            SELECT
+                CDUNIDADE,
+                NMUNIDADE,
+                DESCRICAO
+            FROM UNIDADES
         """)
         return cur.fetchall()
 

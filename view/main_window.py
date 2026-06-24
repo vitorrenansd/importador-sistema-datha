@@ -110,9 +110,8 @@ class MainWindow:
         self.aliquota_panel.pack(fill="x", pady=(0, 10))
 
     def _build_import_panel(self, parent):
-        card = self._card(parent, "Importar")
         self.btn_import = tk.Button(
-            card, text="Importar novos",
+            parent, text="Importar produtos",
             command=self.controller.on_start_import,
             bg="#444460", fg=FG_DIM,
             activebackground=SUCCESS,
@@ -120,14 +119,14 @@ class MainWindow:
             cursor="hand2", padx=12, pady=10,
             state="disabled"
         )
-        self.btn_import.pack(fill="x")
+        self.btn_import.pack(fill="x", pady=(0, 4))
 
         self.progress_var = tk.DoubleVar()
         self.progress = ttk.Progressbar(
-            card, variable=self.progress_var,
+            parent, variable=self.progress_var,
             maximum=100, mode="determinate"
         )
-        self.progress.pack(fill="x", pady=(8, 0))
+        self.progress.pack(fill="x")
         style = ttk.Style()
         style.theme_use("default")
         style.configure("TProgressbar", troughcolor=BG, background=ACCENT2, thickness=6)

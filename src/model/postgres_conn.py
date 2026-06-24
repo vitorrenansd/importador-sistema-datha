@@ -1,31 +1,23 @@
+from config import get_postgres_config
 import random
-
-try:
-    import pg8000
-    import pg8000.native
-except ImportError:
-    pg8000 = None
-
+import pg8000
 
 class PostgresConnection:
     def __init__(self):
         self.conn = None
 
-    def connect(self, host: str, port: str, database: str, user: str, password: str) -> tuple[bool, str]:
-        if pg8000 is None:
-            return False, "Lib 'pg8000' não instalada. Rodar no cmd: pip install pg8000"
+    def connect(self, host, port, database, user, password):
         try:
             self.conn = pg8000.connect(
                 host=host,
-                port=int(port),
+                port=port,
                 database=database,
                 user=user,
                 password=password
             )
-            self.conn.autocommit = False
-            return True, f"PostgreSQL conectado: {host}:{port}/{database}"
+
+            return True, f"PostgreSQL conectado: {f"{host}/{port}:{database}"}"
         except Exception as e:
-            self.conn = None
             return False, f"PostgreSQL error: {e}"
 
     def _cursor(self):

@@ -76,10 +76,11 @@ class MainWindow:
         self.fb_db   = self._entry_row(card, "Database", 2)
         self.fb_user = self._entry_row(card, "User",     3)
         self.fb_pass = self._entry_row(card, "Password", 4, show="•")
-        self.fb_host.set("localhost")
-        self.fb_port.set("3050")
-        self.fb_user.set("SYSDBA")
-        self.fb_pass.set("masterkey")
+        ## self.fb_host.set("cfg.getlocalhost")
+        ## self.fb_port.set("3050")
+        ## self.fb_user.set("SYSDBA")
+        ## self.fb_db.set("C:/AltaSoft")
+        ## self.fb_pass.set("masterkey")
 
     def _build_postgres_panel(self, parent):
         card = self._card(parent, "Config PostgreSQL")
@@ -88,10 +89,11 @@ class MainWindow:
         self.pg_db   = self._entry_row(card, "Database", 2)
         self.pg_user = self._entry_row(card, "User",     3)
         self.pg_pass = self._entry_row(card, "Password", 4, show="•")
-        self.pg_host.set("localhost")
-        self.pg_port.set("5432")
-        self.pg_user.set("postgres")
-        self.pg_pass.set("@skydiver2442!")
+        ## self.pg_host.set("localhost")
+        ## self.pg_port.set("5432")
+        ## self.pg_user.set("postgres")
+        ## self.pg_db.set("zerada_db")
+        ## self.pg_pass.set("@skydiver2442!")
 
     def _build_test_button(self, parent):
         tk.Button(
@@ -163,6 +165,13 @@ class MainWindow:
             "user":     self.fb_user.get().strip(),
             "password": self.fb_pass.get(),
         }
+    
+    def set_fb_credentials(self, cfg: dict):
+        self.fb_host.set(cfg.get("host", ""))
+        self.fb_port.set(str(cfg.get("port", "")))
+        self.fb_db.set(cfg.get("database", ""))
+        self.fb_user.set(cfg.get("user", ""))
+        self.fb_pass.set(cfg.get("password", ""))
 
     def get_pg_credentials(self) -> dict:
         return {
@@ -172,6 +181,14 @@ class MainWindow:
             "user":     self.pg_user.get().strip(),
             "password": self.pg_pass.get(),
         }
+
+    def set_pg_credentials(self, cfg: dict):
+        self.pg_host.set(cfg.get("host", ""))
+        self.pg_port.set(str(cfg.get("port", "")))
+        self.pg_db.set(cfg.get("database", ""))
+        self.pg_user.set(cfg.get("user", ""))
+        self.pg_pass.set(cfg.get("password", ""))
+
 
     def load_aliquotas(self, fb_list: list[str], pg_list: list[dict]):
         self.aliquota_panel.load(fb_list, pg_list)

@@ -4,7 +4,7 @@ from controller.app_controller import AppController
 
 def main():
     root = tk.Tk()
-    controller = AppController(root)
+    AppController(root)
     root.mainloop()
 
 

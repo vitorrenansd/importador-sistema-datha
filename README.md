@@ -6,6 +6,6 @@
 `py -m pip install fdb pg8000`
 
 ## How to generate .exe:
-`py -m pip install pyinstaller`
-`cd output`
-`py -m PyInstaller --onefile --windowed --name="ImportadorSistemaDatha" ../src/main.py`
+1. `py -m pip install pyinstaller`
+2. `cd output`
+3. `py -m PyInstaller --onefile --windowed --name="ImportadorSistemaDatha" ../src/main.py`

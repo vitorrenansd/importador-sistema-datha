@@ -5,6 +5,7 @@ import pg8000
 class PostgresConnection:
     def __init__(self):
         self.conn = None
+        self._limites: dict[str, dict[str, int]] = {}
 
     def connect(self, host, port, database, user, password):
         try:
@@ -22,6 +23,29 @@ class PostgresConnection:
 
     def _cursor(self):
         return self.conn.cursor()
+
+    def _limites_varchar(self, table: str) -> dict[str, int]:
+        """Tamanho maximo das colunas de texto da tabela. Lido uma vez por conexao."""
+        if table not in self._limites:
+            cur = self._cursor()
+            cur.execute("""
+                SELECT column_name, character_maximum_length
+                FROM information_schema.columns
+                WHERE table_schema = 'public'
+                  AND table_name = %s
+                  AND character_maximum_length IS NOT NULL
+            """, (table,))
+            self._limites[table] = {r[0]: r[1] for r in cur.fetchall()}
+        return self._limites[table]
+
+    def _texto(self, table: str, column: str, value) -> str:
+        """
+        Prepara um texto para gravacao: nunca None (no minimo string vazia) e
+        cortado no limite da coluna, para o INSERT nao quebrar por overflow.
+        """
+        texto = "" if value is None else str(value)
+        limite = self._limites_varchar(table).get(column)
+        return texto[:limite] if limite else texto
 
     # (sequence, tabela, coluna do id) - todas as sequences usadas nos inserts
     _SEQUENCES = [
@@ -186,6 +210,7 @@ class PostgresConnection:
                 f_perc_acres_frac,
                 f_preco_fracao,
                 s_localizacao,
+                s_sigla,
                 i_cod_b_ncmsh_c,
                 i_cod_bs_aliquota_interna_c,
                 i_cod_b_grupo_produto_c,
@@ -204,18 +229,19 @@ class PostgresConnection:
                 ib_inativo
             )
             VALUES (
-                %s, %s, %s, %s, %s, %s, 60.0, %s, 0, 0, %s, 0, 1, 0, 0, %s, %s, %s, %s, %s, %s, 1, 1, 1, 0, 0, 1, 0, 0, 0, 0, 0
+                %s, %s, %s, %s, %s, %s, 60, %s, 0, 0, %s, 0, 1, 0, 0, %s, %s, %s, %s, %s, %s, %s, 1, 1, 1, 0, 0, 1, 0, 0, 0, 0, 0
             )
         """,(
                 new_id,
-                f"{new_id}-"+str(random.randint(1, 9)),
+                self._texto("m_produto_c", "s_referencia", f"{new_id}-"+str(random.randint(1, 9))),
                 data["external_number"],
-                data["description"],
-                data["description"],
+                self._texto("m_produto_c", "s_descricao_produto", data["description"]),
+                self._texto("m_produto_c", "s_descricao_reduzida", data["description"]),
                 data["cost_price"],
                 data["sale_price"],
                 data["stock"],
-                data["location"],
+                self._texto("m_produto_c", "s_localizacao", data["location"]),
+                self._texto("m_produto_c", "s_sigla", None),
                 data["ncm_id"],
                 data["aliquota_id"],
                 data["group_id"],

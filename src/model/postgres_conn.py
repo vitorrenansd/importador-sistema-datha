@@ -137,7 +137,7 @@ class PostgresConnection:
         cur.execute("""
             INSERT INTO b_ncmsh_c (i_cod_b_ncmsh_c, s_descricao, ib_modificado)
             VALUES (%s, %s, 0)
-        """,(new_id, description))
+        """,(new_id, self._texto("b_ncmsh_c", "s_descricao", description)))
 
         return new_id
     
@@ -172,7 +172,7 @@ class PostgresConnection:
         cur.execute("""
             INSERT INTO b_grupo_produto_c (i_cod_b_grupo_produto_c, s_descricao_grupo_produto)
             VALUES (%s, %s)
-        """,(new_id, description[:40]))
+        """,(new_id, self._texto("b_grupo_produto_c", "s_descricao_grupo_produto", description)))
         return new_id
     
     def create_unit(self, abbreviation: str, description: str = None) -> int:
@@ -184,7 +184,11 @@ class PostgresConnection:
             INSERT INTO bs_unidade_produto_c
                 (i_cod_bs_unidade_produto_c, s_descricao_unid_prod, s_desc_red_unid_prod)
             VALUES (%s, %s, %s)
-        """, (new_id, description, description or abbreviation))
+        """, (
+            new_id,
+            self._texto("bs_unidade_produto_c", "s_descricao_unid_prod", description or abbreviation),
+            self._texto("bs_unidade_produto_c", "s_desc_red_unid_prod", description or abbreviation),
+        ))
 
         return new_id
 

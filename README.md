@@ -19,4 +19,4 @@ o .exe, senao o PyInstaller nao o empacota.
 ## How to generate .exe:
 1. `py -m pip install pyinstaller`
 2. `cd output`
-3. `py -m PyInstaller --onefile --windowed --name="ImportadorSistemaDatha" ../src/main.py`
+3. `py -m PyInstaller --clean --onefile --windowed --name="ImportadorSistemaDatha" ../src/main.py`

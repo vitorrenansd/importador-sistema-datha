@@ -1,16 +1,20 @@
 from config import get_firebird_config
-import fdb
+import firebirdsql
 
 class FirebirdConnection:
     def __init__(self):
         self.conn = None
 
     def connect(self, host, port, database, user, password):
+        dsn = f"{host}/{port}:{database}"
         try:
-            dsn = f"{host}/{port}:{database}"
-
-            self.conn = fdb.connect(
-                dsn=dsn,
+            # firebirdsql e um driver puro Python: fala o wire protocol
+            # direto com o servidor, sem depender da fbclient.dll instalada
+            # na maquina (a do Firebird 2.1 nao e compativel com o fdb).
+            self.conn = firebirdsql.connect(
+                host=host,
+                port=int(port),
+                database=database,
                 user=user,
                 password=password,
                 charset="UTF8"

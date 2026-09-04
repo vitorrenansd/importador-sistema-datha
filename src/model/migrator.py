@@ -27,6 +27,15 @@ class Migrator:
         on_log(msg: str, tag: str): callback for log panel
         """
         result = MigrationResult()
+
+        # O sistema legado grava ids sem avancar as sequences, entao elas ficam
+        # atras do que ja existe e o nextval devolveria um id duplicado.
+        ajustadas = self.pg.sync_sequences(on_log)
+        if ajustadas:
+            on_log(f"{ajustadas} sequence(s) reposicionada(s) antes da importacao.", "info")
+        else:
+            on_log("Sequences ja estavam consistentes.", "dim")
+
         products = self.fb.fetch_products()
         total = len(products)
         on_log(f"Total de produtos no Firebird: {total}", "info")

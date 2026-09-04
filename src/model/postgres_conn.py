@@ -23,6 +23,54 @@ class PostgresConnection:
     def _cursor(self):
         return self.conn.cursor()
 
+    # (sequence, tabela, coluna do id) - todas as sequences usadas nos inserts
+    _SEQUENCES = [
+        ("seq_b_ncmsh_c",               "b_ncmsh_c",               "i_cod_b_ncmsh_c"),
+        ("seq_b_grupo_produto_c",       "b_grupo_produto_c",       "i_cod_b_grupo_produto_c"),
+        ("seq_bs_unidade_produto_c",    "bs_unidade_produto_c",    "i_cod_bs_unidade_produto_c"),
+        ("seq_m_produto_c",             "m_produto_c",             "i_cod_m_produto_c"),
+        ("seq_r_produto_cod_barra_c",   "r_produto_cod_barra_c",   "i_cod_r_produto_cod_barra_c"),
+        ("seq_d_estoque_produto_c",     "d_estoque_produto_c",     "i_cod_d_estoque_produto_c"),
+        ("seq_r_lista_preco_produto_c", "r_lista_preco_produto_c", "i_cod_r_lista_preco_produto_c"),
+    ]
+
+    def sync_sequences(self, on_log=None) -> int:
+        """
+        O sistema legado grava o id na tabela sem avancar a sequence, entao ela
+        fica atras do que ja foi gravado e o nextval devolve um id duplicado.
+
+        Reposiciona cada sequence em MAX(id) para que o proximo nextval caia no
+        numero seguinte ao ja gravado. Nunca anda para tras: sequences que ja
+        estao a frente do MAX(id) sao deixadas como estao.
+
+        Retorna quantas sequences precisaram de ajuste.
+        """
+        cur = self._cursor()
+        ajustadas = 0
+
+        for seq, table, column in self._SEQUENCES:
+            cur.execute(f"SELECT last_value, is_called FROM public.{seq}")
+            last_value, is_called = cur.fetchone()
+
+            cur.execute(f"SELECT COALESCE(MAX({column}), 0) FROM public.{table}")
+            max_id = cur.fetchone()[0]
+
+            proximo = last_value + 1 if is_called else last_value
+            if proximo > max_id:
+                continue
+
+            cur.execute("SELECT setval(%s, %s, true)", (f"public.{seq}", max_id))
+            ajustadas += 1
+            if on_log:
+                on_log(
+                    f"  {seq}: nextval daria {proximo}, ja usado. "
+                    f"Reposicionada para {max_id}, proximo id = {max_id + 1}.",
+                    "warn"
+                )
+
+        self.commit()
+        return ajustadas
+
     def fetch_aliquotas(self) -> list[dict]:
         cur = self._cursor()
         cur.execute("""
@@ -156,7 +204,7 @@ class PostgresConnection:
                 ib_inativo
             )
             VALUES (
-                %s, %s, %s, %s, %s, %s, 0, %s, 0, 0, %s, 0, 1, 0, 0, %s, %s, %s, %s, %s, %s, 1, 1, 1, 0, 0, 1, 0, 0, 0, 0, 0
+                %s, %s, %s, %s, %s, %s, 60.0, %s, 0, 0, %s, 0, 1, 0, 0, %s, %s, %s, %s, %s, %s, 1, 1, 1, 0, 0, 1, 0, 0, 0, 0, 0
             )
         """,(
                 new_id,
